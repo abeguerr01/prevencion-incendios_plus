@@ -2,16 +2,21 @@
 
 ## Autores y razón del proyecto
 
-**Autores**:
-- Alejadro Beguer
-- Daniel Rivas
-- Pau Hernandez
-- David Martinez
+**Autor**: `Alejadro Beguer Ruiz`
 
 **Razon del proyecto**:
-Este proyecto ha sido creado con la razon de participar en la primera edición de "Datathon UpData CLM"-  
-Con este proyecto hemos conseguido clasificar a la fase final en donde hemos conseguido llegar 3 equipos de FP de toda la Castilla - La Mancha
+Este proyecto ha sido modificado a partir del proyecto ["prediccion-incendios"](https://github.com/abeguerr01/prediccion_incendios), en el cual he participado yo mismo, con la razon de mejorarlo y presentarlo como trabajo de fin de grado del grado superior de desarrollo de aplicaciones multiplataforma.
 
+## Cambios aplicados
+He añadido una interfaz hecha con JavaFX que permite realizar ajustes en el funcionamiento del 
+
+---
+---
+---
+---
+---
+---
+---
 ---
 
 ## Detalles
@@ -33,13 +38,11 @@ Estructura mínima esperada:
 #### 2.1. Windows
 
 1. Abre una terminal en la carpeta del proyecto, por ejemplo:
-
    ```bash
    cd D:\USER\Documents\GitHub\prevencion_incendios
    ```
 
 2. (Opcional pero recomendado) Crea y activa un entorno virtual:
-
    ```bash
    python -m venv .venv
    .venv\Scripts\activate
