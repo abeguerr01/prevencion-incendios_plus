@@ -1,0 +1,8 @@
+pytest-playwright
+pandas
+openpyxl
+requests
+scikit-learn
+lightgbm
+pyproj
+catboost

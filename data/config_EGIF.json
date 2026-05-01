@@ -1,0 +1,13 @@
+{
+    "anio_inicio":2015,
+    "anio_fin":2024,
+    "ComunidadAutonoma":"CASTILLA-MANCHA",
+    "Provincia":"GUADALAJARA",
+    "Municipio":null,
+    "ComarcaIsla":null,
+
+    "borrarDirectorio": false,
+    "nameZip": "Xlsx",
+    "nameCSV": "fichero",
+    "nameJson": "archivo"
+}
