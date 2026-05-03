@@ -6,3 +6,4 @@ scikit-learn
 lightgbm
 pyproj
 catboost
+Flask

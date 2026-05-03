@@ -1,0 +1,84 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configuración - Prevención de Incendios</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 24px; background: #f4f4f4; }
+        .container { max-width: 820px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 0 16px rgba(0,0,0,0.08); }
+        label { display: block; margin-bottom: 12px; }
+        input[type=text], input[type=number] { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; }
+        .section { margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; }
+        .checkbox { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+        button { padding: 12px 20px; font-size: 1rem; }
+        .message { margin: 16px 0; padding: 12px; background: #e0f7da; border: 1px solid #8bc34a; color: #33691e; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Configuración</h1>
+    {% if message %}
+        <div class="message">{{ message }}</div>
+    {% endif %}
+    <form method="post">
+        <div class="section">
+            <h2>AEMET</h2>
+            <label>
+                API key:
+                <input type="text" name="api" value="{{ config.AEMET.api or '' }}" placeholder="Introduce la API key de AEMET">
+            </label>
+        </div>
+        <div class="section">
+            <h2>EGIF</h2>
+            <div class="checkbox">
+                <input type="checkbox" id="activo" name="activo" {% if config.EGIF.activo %}checked{% endif %}>
+                <label for="activo">EGIF activo</label>
+            </div>
+            <label>
+                Año inicio:
+                <input type="number" name="anio_inicio" value="{{ config.EGIF.anio_inicio }}" min="2000" max="2100">
+            </label>
+            <label>
+                Año fin:
+                <input type="number" name="anio_fin" value="{{ config.EGIF.anio_fin }}" min="2000" max="2100">
+            </label>
+            <label>
+                Comunidad Autónoma:
+                <input type="text" name="ComunidadAutonoma" value="{{ config.EGIF.ComunidadAutonoma or '' }}">
+            </label>
+            <label>
+                Provincia:
+                <input type="text" name="Provincia" value="{{ config.EGIF.Provincia or '' }}">
+            </label>
+            <label>
+                Municipio:
+                <input type="text" name="Municipio" value="{{ config.EGIF.Municipio or '' }}">
+            </label>
+            <label>
+                Comarca/Isla:
+                <input type="text" name="ComarcaIsla" value="{{ config.EGIF.ComarcaIsla or '' }}">
+            </label>
+            <div class="checkbox">
+                <input type="checkbox" id="borrarDirectorio" name="borrarDirectorio" {% if config.EGIF.borrarDirectorio %}checked{% endif %}>
+                <label for="borrarDirectorio">Borrar directorio antes de descargar</label>
+            </div>
+            <label>
+                Nombre ZIP:
+                <input type="text" name="nameZip" value="{{ config.EGIF.nameZip or '' }}">
+            </label>
+            <label>
+                Nombre CSV:
+                <input type="text" name="nameCSV" value="{{ config.EGIF.nameCSV or '' }}">
+            </label>
+            <label>
+                Nombre JSON:
+                <input type="text" name="nameJson" value="{{ config.EGIF.nameJson or '' }}">
+            </label>
+        </div>
+        <button type="submit">Guardar configuración</button>
+    </form>
+    <p><a href="{{ url_for('index') }}">Volver al inicio</a></p>
+</div>
+</body>
+</html>

@@ -1,9 +1,10 @@
-import requests
+﻿import requests
 import json
 import time
 from collections import defaultdict
 from datetime import datetime
 import math
+
 
 def prec_a_float(prec):
     if prec is None:
@@ -53,8 +54,8 @@ def identificadores(provincia):
     string_estaciones = ""
     for estacion in estaciones:
         if estacion.get("provincia") == provincia:
-            string_estaciones +=  estacion.get("indicativo") + "," 
-    return string_estaciones[:-1] #devuelve una string con el indicativo: "4007Y,4091Y,4096Y,7066Y,7067Y,7072Y,7096B,7103Y,8175,8177A,8178D,8198Y"
+            string_estaciones +=  estacion.get("indicativo") + ","
+    return string_estaciones[:-1]
 
 
 def solicitud(fecha_ini, fecha_fin, id_estaciones, api):
@@ -63,53 +64,45 @@ def solicitud(fecha_ini, fecha_fin, id_estaciones, api):
     fecha_fin: "AAAA-MM-DD"
     id_estaciones: "identificacion1,identificacion2,...."
     """
-    #Url
     url = "https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/"
     url += fecha_ini + "T00%3A00%3A00UTC/fechafin/" + fecha_fin + "T23%3A59%3A59UTC/estacion/" + id_estaciones
 
-    #Api key
     mi_api_key = api
-    querystring = {"api_key":mi_api_key}
+    querystring = {"api_key": mi_api_key}
 
-    headers = {
-        'cache-control': "no-cache"
-        }
+    headers = {'cache-control': "no-cache"}
 
-    #Respuesta
     response = requests.request("GET", url, headers=headers, params=querystring)
     response = response.json()
 
-    #Se repite la solicitud otra vez por si no sale bien
-    while (response["estado"] != 200):
+    while response["estado"] != 200:
         response = requests.request("GET", url, headers=headers, params=querystring)
         response = response.json()
 
-
-    url_datos= response["datos"]
-
+    url_datos = response["datos"]
     response = requests.request("GET", url_datos, headers=headers)
 
+    return response.json()
 
-    return response.json() # Devuelve cadena json
 
 def printear(mensaje):
     print(mensaje)
 
 
 
-
 def run():
-
-    #Todas las escaciones de la provincia 
     provincia = "GUADALAJARA"
     id_estaciones = identificadores(provincia)
 
-    with open("data/APIs.json", "r") as archivo:
-        japi = json.load(archivo)
-    api = japi["Alejandro"] #Aqui podemos ajustar mas facilmente la api que queremos usar
+    with open("data/config.json", "r", encoding="utf-8") as archivo:
+        config = json.load(archivo)
+    api = config.get("AEMET", {}).get("api", "").strip()
 
+    if not api:
+        with open("data/APIs.json", "r", encoding="utf-8") as archivo:
+            japi = json.load(archivo)
+        api = japi.get("Alejandro", "")
 
-    #Fecha de inicio
     anyo_inicio = "2015"
     anyo_actual = "2025"
     anyo = int(anyo_inicio)
@@ -121,7 +114,6 @@ def run():
         junio = anyo_str + "-06-30"
         julio = anyo_str + "-07-01"
         diciembre = anyo_str + "-12-31"
-
 
         response_1 = solicitud(enero, junio, id_estaciones, api)
         time.sleep(10)
