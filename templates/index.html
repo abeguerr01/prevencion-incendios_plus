@@ -1,28 +1,33 @@
-﻿<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Prevención de Incendios</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 24px; background: #f4f4f4; }
-        .container { max-width: 720px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 0 16px rgba(0,0,0,0.08); }
-        button, input[type=submit] { padding: 12px 20px; font-size: 1rem; margin-top: 12px; }
-        .message { margin: 16px 0; padding: 12px; background: #e0f7da; border: 1px solid #8bc34a; color: #33691e; border-radius: 8px; }
-    </style>
-</head>
-<body>
-<div class="container">
+{% extends "base.html" %}
+
+{% block content %}
     <h1>Prevención de Incendios</h1>
+    
     {% if message %}
         <div class="message">{{ message }}</div>
     {% endif %}
-    <p>Use los botones para iniciar el proceso o editar los ajustes.</p>
-    <form action="{{ url_for('start') }}" method="post">
-        <button type="submit">Iniciar proceso</button>
-    </form>
-    <p>Estado del proceso: <strong>{{ 'En ejecución' if running else 'Detenido' }}</strong></p>
-    <p><a href="{{ url_for('config') }}">Ir a configuración</a></p>
-</div>
-</body>
-</html>
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <p>Bienvenido al sistema de análisis y predicción. Utiliza los controles a continuación para gestionar el proceso o modificar los parámetros de los modelos.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1.5rem; align-items: center;">
+        <div class="section" style="width: 100%; max-width: 400px; text-align: center;">
+            <h3>Estado del proceso</h3>
+            <p style="font-size: 1.1rem; color: {% if running %}#4ade80{% else %}var(--text-muted){% endif %};">
+                <strong>{{ 'En ejecución ⚡' if running else 'Detenido ⏸️' }}</strong>
+            </p>
+            
+            <form action="{{ url_for('start_process') }}" method="post" style="margin-top: 1.5rem;">
+                <button type="submit" style="width: 100%; font-size: 1.1rem; padding: 1rem;" {% if running %}disabled style="opacity: 0.5; cursor: not-allowed;"{% endif %}>
+                    ▶ Iniciar Proceso
+                </button>
+            </form>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('config') }}" class="btn" style="background: rgba(255,255,255,0.1); color: #fff;">⚙️ Configuración</a>
+            <a href="{{ url_for('results') }}" class="btn" style="background: rgba(255,255,255,0.1); color: #fff;">📊 Ver Resultados</a>
+        </div>
+    </div>
+{% endblock %}

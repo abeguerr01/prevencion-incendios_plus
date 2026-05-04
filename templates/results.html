@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Resultados de Predicción</h1>
+    
+    {% if message %}
+        <div class="message" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
+            {{ message }}
+        </div>
+    {% endif %}
+
+    {% if exists %}
+        <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <p style="margin: 0;">Mostrando las predicciones más relevantes generadas por el modelo.</p>
+        </div>
+        
+        <div class="table-container">
+            {{ table_html | safe }}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 1rem;">
+            <p style="font-size: 1.2rem; margin-bottom: 1.5rem;">Aún no hay resultados disponibles.</p>
+            <p>Vuelve al inicio y ejecuta el proceso para generar nuevas predicciones.</p>
+            <a href="{{ url_for('index') }}" class="btn" style="margin-top: 1rem;">Ir al Inicio</a>
+        </div>
+    {% endif %}
+{% endblock %}

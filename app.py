@@ -1,4 +1,4 @@
-﻿from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for
 import json
 import os
 import threading
@@ -68,6 +68,44 @@ def config():
 
     return render_template("config.html", config=config_data, message=message)
 
+@app.route("/results")
+def results():
+    import pandas as pd
+    import os
+    results_path = os.path.join(ROOT_DIR, "Output", "resultados", "predicion.csv")
+    if os.path.exists(results_path):
+        try:
+            df = pd.read_csv(results_path)
+            # Ordenar para mostrar primero los que tienen mayor predicción o simplemente coger las primeras filas
+            if "pred_incendio" in df.columns:
+                df = df.sort_values(by="pred_incendio", ascending=False)
+            table_html = df.head(100).to_html(classes="styled-table", index=False)
+            return render_template("results.html", table_html=table_html, exists=True)
+        except Exception as e:
+            return render_template("results.html", message=f"Error leyendo resultados: {str(e)}", exists=False)
+    else:
+        return render_template("results.html", message="El archivo de predicción aún no ha sido generado.", exists=False)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    import threading
+    import webview
+    
+    def start_server():
+        # Iniciamos la app de Flask en el puerto 5000 (usando 127.0.0.1)
+        app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+
+    # Creamos un hilo para ejecutar el servidor Flask en segundo plano
+    t = threading.Thread(target=start_server, daemon=True)
+    t.start()
+    
+    # Creamos la ventana con pywebview apuntando a la URL local
+    webview.create_window(
+        'Prevención de Incendios - Panel de Control', 
+        'http://127.0.0.1:5000/',
+        width=1024,
+        height=768,
+        min_size=(800, 600)
+    )
+    
+    # Iniciamos pywebview
+    webview.start(debug=False)

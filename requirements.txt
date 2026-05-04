@@ -7,3 +7,4 @@ lightgbm
 pyproj
 catboost
 Flask
+pywebview
