@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejecutando Proceso - Panel de Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="ejecutando-body">
+    <div class="container glass-panel">
+        <h1 class="ejecutando-title" id="title">EJECUTANDO...</h1>
+        <div class="loader-wrapper" id="loader-wrapper">
+            <div class="loader"></div>
+        </div>
+        <div class="logs-container" id="logs"></div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; width: 100%; max-width: 600px;">
+            <button id="btn-copiar" style="background: rgba(255,255,255,0.1); flex: 1;" onclick="copiarLogs()">Copiar Logs</button>
+            <button id="btn-continuar" style="flex: 1;" onclick="location.href='/registros'" disabled>Ver Resultados</button>
+        </div>
+    </div>
+    
+    <script>
+        const logsContainer = document.getElementById('logs');
+        const title = document.getElementById('title');
+        const loaderWrapper = document.getElementById('loader-wrapper');
+        const btnContinuar = document.getElementById('btn-continuar');
+        const eventSource = new EventSource("{{ url_for('stream_logs') }}");
+
+        eventSource.onmessage = function(event) {
+            if (event.data === "DONE") {
+                eventSource.close();
+                title.textContent = "COMPLETADO";
+                title.style.animation = "none";
+                loaderWrapper.style.display = "none";
+                btnContinuar.disabled = false;
+            } else {
+                const logEntry = document.createElement("div");
+                logEntry.textContent = event.data;
+                logEntry.className = "log-entry";
+                logsContainer.appendChild(logEntry);
+                // Scroll down
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+        };
+
+        eventSource.onerror = function() {
+            console.error("Error leyendo logs.");
+            const errorEntry = document.createElement("div");
+            errorEntry.textContent = "⚠ Error de conexión. Reintentando...";
+            errorEntry.className = "log-entry error-log";
+            logsContainer.appendChild(errorEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        };
+
+        function copiarLogs() {
+            const logsText = Array.from(logsContainer.children).map(div => div.textContent).join('\n');
+            navigator.clipboard.writeText(logsText).then(() => {
+                const btn = document.getElementById('btn-copiar');
+                btn.textContent = "¡Copiado!";
+                btn.style.background = "var(--accent-color)";
+                setTimeout(() => {
+                    btn.textContent = "Copiar Logs";
+                    btn.style.background = "rgba(255,255,255,0.1)";
+                }, 2000);
+            }).catch(err => {
+                console.error("Error al copiar:", err);
+            });
+        }
+    </script>
+</body>
+</html>

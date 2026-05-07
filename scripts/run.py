@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 
 import scripts.obtenerDatosEGIF as egif
@@ -12,14 +12,12 @@ import scripts.entrenar_modelo_catboost as entrenarModelo
 import scripts.filtrar_fecha as ff
 import scripts.predictor_analizador as predictor
 
-ROOT_DIR = os.path.dirname(__file__)
+ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
 
-
 def cargar_config():
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, "r", encoding="utf-8-sig") as f:
         return json.load(f)
-
 
 def main():
     config = cargar_config()
@@ -29,8 +27,8 @@ def main():
     c_latlon.crear_estaciones_v2(os.path.join(ROOT_DIR, "data", "estaciones.json"))
     aemet.run()
 
-    egif_config = config.get("EGIF", {})
-    if egif_config.get("activo", False):
+    egif_config = config["EGIF"]
+    if egif_config["activo"]:
         print(" [2/8] Ejecutando EGIF...")
         egif.run()
     else:

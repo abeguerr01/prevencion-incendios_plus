@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Resultados - Prevención de Incendios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container glass-panel" style="max-width: 1000px;">
+        <h1>Resultados del Proceso</h1>
+        {% if fecha %}
+            <p style="text-align: center; font-size: 0.9rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 20px;">
+                Última ejecución: {{ fecha }}
+            </p>
+        {% endif %}
+        {% if resumen %}
+            <div class="log-container" style="max-height: 500px; text-align: left; margin-bottom: 2rem;">
+                <pre style="margin: 0;">{{ resumen }}</pre>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="location.href='/descargar_prediccion'" style="flex: 2;">Descargar CSV Completo</button>
+                <button onclick="location.href='/inicio'" style="flex: 1; background: rgba(255,255,255,0.1);">Volver a Inicio</button>
+            </div>
+        {% else %}
+            <div class="message" style="margin-bottom: 2rem;">
+                Aún no hay predicciones generadas. Por favor, ejecuta un proceso primero.
+            </div>
+            <div style="display: flex; justify-content: center;">
+                <button onclick="location.href='/inicio'">Volver a Inicio</button>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

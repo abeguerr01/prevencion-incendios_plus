@@ -1,33 +1,22 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
 
-{% block content %}
-    <h1>Prevención de Incendios</h1>
-    
-    {% if message %}
-        <div class="message">{{ message }}</div>
-    {% endif %}
-    
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <p>Bienvenido al sistema de análisis y predicción. Utiliza los controles a continuación para gestionar el proceso o modificar los parámetros de los modelos.</p>
-    </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prevención de Incendios - Panel de Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 
-    <div style="display: flex; flex-direction: column; gap: 1.5rem; align-items: center;">
-        <div class="section" style="width: 100%; max-width: 400px; text-align: center;">
-            <h3>Estado del proceso</h3>
-            <p style="font-size: 1.1rem; color: {% if running %}#4ade80{% else %}var(--text-muted){% endif %};">
-                <strong>{{ 'En ejecución ⚡' if running else 'Detenido ⏸️' }}</strong>
-            </p>
-            
-            <form action="{{ url_for('start_process') }}" method="post" style="margin-top: 1.5rem;">
-                <button type="submit" style="width: 100%; font-size: 1.1rem; padding: 1rem;" {% if running %}disabled style="opacity: 0.5; cursor: not-allowed;"{% endif %}>
-                    ▶ Iniciar Proceso
-                </button>
-            </form>
-        </div>
-
+<body>
+    <div class="container glass-panel">
+        <h1>Panel de Control de Prevención de Incendios</h1>
+        <button class="btn-main" onclick="location.href='/ejecutando'">INICIAR PREDICCIÓN</button>
         <div style="display: flex; gap: 1rem;">
-            <a href="{{ url_for('config') }}" class="btn" style="background: rgba(255,255,255,0.1); color: #fff;">⚙️ Configuración</a>
-            <a href="{{ url_for('results') }}" class="btn" style="background: rgba(255,255,255,0.1); color: #fff;">📊 Ver Resultados</a>
+            <button onclick="location.href='/config'" style="flex: 1;">Configuración</button>
+            <button onclick="location.href='/registros'" style="flex: 1;">Últimos Resultados</button>
         </div>
     </div>
-{% endblock %}
+</body>
+
+</html>

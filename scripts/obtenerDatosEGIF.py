@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import os
 import glob
 import zipfile
@@ -7,7 +7,9 @@ import pandas as pd
 from playwright.async_api import async_playwright
 
 async def scraper():
-    with open("data/config.json", "r", encoding="utf-8") as f:
+    ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+    CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
+    with open(CONFIG_PATH, "r", encoding="utf-8-sig") as f:
         config = json.load(f)
     dataScraper = config.get("EGIF", {})
 

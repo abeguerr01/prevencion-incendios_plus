@@ -19,3 +19,18 @@ venv/
 
 # Idea enviroment
 demo/.idea/
+
+# Data and Outputs
+Output/
+Output/EGIF/
+Output/AEMET/
+Output/Dataset/
+Output/modelo/
+Output/resultados/
+
+# Ignore sensitive config files if you don't want them tracked
+# data/config.json
+data/APIs.json
+
+# MacOS
+.DS_Store

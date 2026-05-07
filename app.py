@@ -1,111 +1,131 @@
 from flask import Flask, render_template, request, redirect, url_for
-import json
+import subprocess
+import sys
 import os
 import threading
-
-import main as project_main
-
+import webview
+import scripts.run as run
+    
 ROOT_DIR = os.path.dirname(__file__)
 CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
 
 app = Flask(__name__)
 
 
-def load_config():
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+#region Renderizado de HTMLs
+@app.route('/inicio')
+def flk_index():
+    """Accedemos a la pantalla principal"""
+    return render_template("index.html")
 
+@app.route('/ejecutando')
+def flk_ejecutando():
+    """Accedemos a la pantalla de ejecución"""
+    return render_template("ejecutando.html")
 
-def save_config(config_data):
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config_data, f, indent=4, ensure_ascii=False)
+@app.route('/stream_logs')
+def stream_logs():
+    def generate():
+        process = subprocess.Popen(
+            [sys.executable, '-u', '-m', 'scripts.run'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            cwd=ROOT_DIR
+        )
+        for line in iter(process.stdout.readline, ''):
+            yield f"data: {line.strip()}\n\n"
+        process.stdout.close()
+        process.wait()
+        yield f"data: DONE\n\n"
+    return app.response_class(generate(), mimetype='text/event-stream')
 
+import csv
+from flask import send_file
 
-@app.route("/")
-def index():
-    message = request.args.get("message", "")
-    running = False
-    thread = app.config.get("PROCESS_THREAD")
-    if thread and thread.is_alive():
-        running = True
-    return render_template("index.html", running=running, message=message)
+@app.route('/registros')
+def flk_registros():
+    """Accedemos a la pantalla de registros"""
+    txt_path = os.path.join(ROOT_DIR, "Output", "resultados", "resumen_prediccion.txt")
+    resumen = ""
+    fecha_registro = ""
+    
+    if os.path.exists(txt_path):
+        import datetime
+        timestamp = os.path.getmtime(txt_path)
+        fecha_registro = datetime.datetime.fromtimestamp(timestamp).strftime('%d/%m/%Y a las %H:%M:%S')
+        with open(txt_path, "r", encoding="utf-8") as f:
+            resumen = f.read()
 
+    return render_template("registros.html", resumen=resumen, fecha=fecha_registro)
 
-@app.route("/start", methods=["POST"])
-def start_process():
-    thread = app.config.get("PROCESS_THREAD")
-    if thread and thread.is_alive():
-        return redirect(url_for("index", message="El proceso ya está en ejecución."))
+@app.route('/descargar_prediccion')
+def descargar_prediccion():
+    """Descargar el archivo CSV de predicciones"""
+    csv_path = os.path.join(ROOT_DIR, "Output", "resultados", "predicion.csv")
+    if os.path.exists(csv_path):
+        return send_file(csv_path, as_attachment=True, download_name="prediccion.csv")
+    return "Archivo no encontrado", 404
 
-    worker = threading.Thread(target=project_main.main, daemon=True)
-    worker.start()
-    app.config["PROCESS_THREAD"] = worker
-    return redirect(url_for("index", message="Proceso iniciado en segundo plano."))
+@app.route('/config')
+def flk_config():
+    """Accedemos a la pantalla de configuración"""
+    return render_template("config.html")
 
+import json
 
-@app.route("/config", methods=["GET", "POST"])
-def config():
-    config_data = load_config()
-    message = ""
-
-    if request.method == "POST":
-        config_data["AEMET"] = {"api": request.form.get("api", "").strip()}
-        egif = config_data.get("EGIF", {})
-        egif["activo"] = request.form.get("activo") == "on"
-        egif["anio_inicio"] = int(request.form.get("anio_inicio", egif.get("anio_inicio", 2015)))
-        egif["anio_fin"] = int(request.form.get("anio_fin", egif.get("anio_fin", 2024)))
-        egif["ComunidadAutonoma"] = request.form.get("ComunidadAutonoma", "").strip() or None
-        egif["Provincia"] = request.form.get("Provincia", "").strip() or None
-        egif["Municipio"] = request.form.get("Municipio", "").strip() or None
-        egif["ComarcaIsla"] = request.form.get("ComarcaIsla", "").strip() or None
-        egif["borrarDirectorio"] = request.form.get("borrarDirectorio") == "on"
-        egif["nameZip"] = request.form.get("nameZip", egif.get("nameZip", "Xlsx")).strip()
-        egif["nameCSV"] = request.form.get("nameCSV", egif.get("nameCSV", "fichero")).strip()
-        egif["nameJson"] = request.form.get("nameJson", egif.get("nameJson", "archivo")).strip()
-        config_data["EGIF"] = egif
-        save_config(config_data)
-        message = "Configuración guardada correctamente."
-
-    return render_template("config.html", config=config_data, message=message)
-
-@app.route("/results")
-def results():
-    import pandas as pd
-    import os
-    results_path = os.path.join(ROOT_DIR, "Output", "resultados", "predicion.csv")
-    if os.path.exists(results_path):
+@app.route('/api/config', methods=['GET', 'POST'])
+def handle_config():
+    if request.method == 'GET':
         try:
-            df = pd.read_csv(results_path)
-            # Ordenar para mostrar primero los que tienen mayor predicción o simplemente coger las primeras filas
-            if "pred_incendio" in df.columns:
-                df = df.sort_values(by="pred_incendio", ascending=False)
-            table_html = df.head(100).to_html(classes="styled-table", index=False)
-            return render_template("results.html", table_html=table_html, exists=True)
+            with open(CONFIG_PATH, "r", encoding="utf-8-sig") as f:
+                return json.load(f)
         except Exception as e:
-            return render_template("results.html", message=f"Error leyendo resultados: {str(e)}", exists=False)
-    else:
-        return render_template("results.html", message="El archivo de predicción aún no ha sido generado.", exists=False)
+            return {"error": str(e)}, 500
+            
+    if request.method == 'POST':
+        try:
+            new_data = request.json
+            with open(CONFIG_PATH, "r", encoding="utf-8-sig") as f:
+                current_data = json.load(f)
+                
+            # Merge values to not overwrite other fields like anio_inicio, etc.
+            if "AEMET" in new_data:
+                current_data["AEMET"]["api"] = new_data["AEMET"]["api"]
+                
+            if "EGIF" in new_data:
+                egif = new_data["EGIF"]
+                current_data["EGIF"]["activo"] = egif.get("activo", True)
+                current_data["EGIF"]["ComunidadAutonoma"] = egif.get("ComunidadAutonoma")
+                current_data["EGIF"]["Provincia"] = egif.get("Provincia")
+                current_data["EGIF"]["Municipio"] = egif.get("Municipio")
+                current_data["EGIF"]["ComarcaIsla"] = egif.get("ComarcaIsla")
+                
+            with open(CONFIG_PATH, "w", encoding="utf-8-sig") as f:
+                json.dump(current_data, f, indent=4, ensure_ascii=False)
+                
+            return {"status": "success"}
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+#endregion 
+
+
+def start_server():
+    """Arrancar el servidor Flask."""
+    # debug=False y use_reloader=False son críticos cuando se usa con hilos y webview
+    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
 
 if __name__ == "__main__":
-    import threading
-    import webview
-    
-    def start_server():
-        # Iniciamos la app de Flask en el puerto 5000 (usando 127.0.0.1)
-        app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
-
-    # Creamos un hilo para ejecutar el servidor Flask en segundo plano
     t = threading.Thread(target=start_server, daemon=True)
     t.start()
-    
-    # Creamos la ventana con pywebview apuntando a la URL local
+
     webview.create_window(
         'Prevención de Incendios - Panel de Control', 
-        'http://127.0.0.1:5000/',
+        'http://127.0.0.1:5000/inicio',
         width=1024,
         height=768,
         min_size=(800, 600)
     )
-    
-    # Iniciamos pywebview
+
     webview.start(debug=False)

@@ -125,37 +125,40 @@ def evaluate(df_labeled: pd.DataFrame, model, feature_list: list, threshold: flo
     return metrics
 
 
-def pretty_print_eval(metrics: dict):
-    print("\n====================")
-    print("EVALUACIÓN")
-    print("====================")
-    print(f"N={metrics['n']} | Positivos={metrics['positivos']} | Negativos={metrics['negativos']}")
-    print(f"Umbral={metrics['threshold']:.3f}")
+def pretty_print_eval(metrics: dict) -> str:
+    out = "\n====================\n"
+    out += "EVALUACIÓN\n"
+    out += "====================\n"
+    out += f"N={metrics['n']} | Positivos={metrics['positivos']} | Negativos={metrics['negativos']}\n"
+    out += f"Umbral={metrics['threshold']:.3f}\n"
     if metrics["roc_auc"] is not None:
-        print(f"ROC-AUC={metrics['roc_auc']:.4f} | PR-AUC={metrics['pr_auc']:.4f}")
+        out += f"ROC-AUC={metrics['roc_auc']:.4f} | PR-AUC={metrics['pr_auc']:.4f}\n"
     else:
-        print("ROC-AUC/PR-AUC: No calculable (solo hay una clase en y_true).")
+        out += "ROC-AUC/PR-AUC: No calculable (solo hay una clase en y_true).\n"
 
-    print(f"Recall={metrics['recall']:.4f} | F1={metrics['f1']:.4f}")
-    print(f"TN={metrics['tn']} FP={metrics['fp']} FN={metrics['fn']} TP={metrics['tp']}")
+    out += f"Recall={metrics['recall']:.4f} | F1={metrics['f1']:.4f}\n"
+    out += f"TN={metrics['tn']} FP={metrics['fp']} FN={metrics['fn']} TP={metrics['tp']}\n"
+    print(out)
+    return out
 
 
-def alert_summary(df_pred: pd.DataFrame, top_k: int = 15):
+def alert_summary(df_pred: pd.DataFrame, top_k: int = 15) -> str:
     if "pred_incendio" not in df_pred.columns or "prob_incendio" not in df_pred.columns:
-        return
+        return ""
 
     alerts = df_pred[df_pred["pred_incendio"] == 1].copy()
     n_alerts = len(alerts)
     n_total = len(df_pred)
 
-    print("\n====================")
-    print("PREDICCIÓN / ALERTAS")
-    print("====================")
-    print(f"Filas={n_total} | Alertas (pred_incendio=1)={n_alerts}")
+    out = "\n====================\n"
+    out += "PREDICCIÓN / ALERTAS\n"
+    out += "====================\n"
+    out += f"Filas={n_total} | Alertas (pred_incendio=1)={n_alerts}\n"
 
     if n_alerts == 0:
-        print("No se predicen incendios con el umbral actual.")
-        return
+        out += "No se predicen incendios con el umbral actual.\n"
+        print(out)
+        return out
 
     alerts = alerts.sort_values("prob_incendio", ascending=False).head(top_k)
 
@@ -164,8 +167,10 @@ def alert_summary(df_pred: pd.DataFrame, top_k: int = 15):
         if c in alerts.columns:
             cols_show.append(c)
 
-    print("\n TOP alertas (más probables):")
-    print(alerts[cols_show].to_string(index=False))
+    out += "\n TOP alertas (más probables):\n"
+    out += alerts[cols_show].to_string(index=False) + "\n"
+    print(out)
+    return out
 
 
 def build_output_csv(df_pred: pd.DataFrame) -> pd.DataFrame:
@@ -212,6 +217,8 @@ def run_pipeline(
     has_target = TARGET_COL in df.columns
 
     df_pred = predict(df, model, feature_list, threshold=threshold)
+    
+    txt_out = ""
 
     # Evaluación si procede
     did_eval = False
@@ -221,17 +228,23 @@ def run_pipeline(
             df_past = df.loc[past_mask].copy()
             if len(df_past) > 0:
                 metrics = evaluate(df_past, model, feature_list, threshold=threshold)
-                pretty_print_eval(metrics)
+                txt_out += pretty_print_eval(metrics)
                 did_eval = True
             else:
                 print("\nNo hay filas con fecha pasada para evaluar.")
         else:
             metrics = evaluate(df, model, feature_list, threshold=threshold)
-            pretty_print_eval(metrics)
+            txt_out += pretty_print_eval(metrics)
             did_eval = True
 
     # Alertas siempre
-    alert_summary(df_pred)
+    txt_out += alert_summary(df_pred)
+    
+    # Guardar resumen en TXT
+    resumen_path = "Output/resultados/resumen_prediccion.txt"
+    os.makedirs(os.path.dirname(resumen_path), exist_ok=True)
+    with open(resumen_path, "w", encoding="utf-8") as f:
+        f.write(txt_out)
 
     # Guardar salida (CSV reducido)
     if output_csv:
