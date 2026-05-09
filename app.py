@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+﻿from flask import Flask, render_template, request, redirect, url_for, send_file
 import subprocess
+import json
 import sys
 import os
 import threading
 import webview
+
 import scripts.run as run
     
 ROOT_DIR = os.path.dirname(__file__)
@@ -40,9 +42,6 @@ def stream_logs():
         yield f"data: DONE\n\n"
     return app.response_class(generate(), mimetype='text/event-stream')
 
-import csv
-from flask import send_file
-
 @app.route('/registros')
 def flk_registros():
     """Accedemos a la pantalla de registros"""
@@ -62,7 +61,7 @@ def flk_registros():
 @app.route('/descargar_prediccion')
 def descargar_prediccion():
     """Descargar el archivo CSV de predicciones"""
-    csv_path = os.path.join(ROOT_DIR, "Output", "resultados", "predicion.csv")
+    csv_path = os.path.join(ROOT_DIR, "Output", "resultados", "prediccion.csv")
     if os.path.exists(csv_path):
         return send_file(csv_path, as_attachment=True, download_name="prediccion.csv")
     return "Archivo no encontrado", 404
@@ -71,8 +70,6 @@ def descargar_prediccion():
 def flk_config():
     """Accedemos a la pantalla de configuración"""
     return render_template("config.html")
-
-import json
 
 @app.route('/api/config', methods=['GET', 'POST'])
 def handle_config():
@@ -121,7 +118,7 @@ if __name__ == "__main__":
     t.start()
 
     webview.create_window(
-        'Prevención de Incendios - Panel de Control', 
+        'Predicción de Incendios - Panel de Control', 
         'http://127.0.0.1:5000/inicio',
         width=1024,
         height=768,
