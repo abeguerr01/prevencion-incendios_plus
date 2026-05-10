@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prevención de Incendios - Configuración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container glass-panel config-container">
+        <h1>Configuración del Sistema</h1>
+        
+        <div class="config-grid">
+            <!-- Columna AEMET -->
+            <div class="section aemet-col">
+                <h2>AEMET</h2>
+                <div class="form-group">
+                    <label for="aemet-api">API Key</label>
+                    <input type="text" id="aemet-api" placeholder="Introduce tu API Key de AEMET">
+                </div>
+                <div style="text-align: right;">
+                    <a href="https://opendata.aemet.es/centrodedescargas/altaUsuario?" target="_blank" class="discreet-link">¿No tienes API? Solicítala aquí</a>
+                </div>
+            </div>
+
+            <!-- Columna EGIF -->
+            <div class="section egif-col">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>EGIF</h2>
+                    <label class="switch">
+                        <input type="checkbox" id="egif-activo" onchange="toggleEgif()">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                
+                <div id="egif-fields" class="egif-fields">
+                    <div class="form-group">
+                        <label for="egif-ca">Comunidad Autónoma</label>
+                        <input type="text" id="egif-ca" placeholder="Ej: CASTILLA-MANCHA">
+                    </div>
+                    <div class="form-group">
+                        <label for="egif-prov">Provincia</label>
+                        <input type="text" id="egif-prov" placeholder="Ej: GUADALAJARA">
+                    </div>
+                    <div class="form-group">
+                        <label for="egif-mun">Municipio</label>
+                        <input type="text" id="egif-mun" placeholder="Dejar en blanco si no aplica">
+                    </div>
+                    <div class="form-group">
+                        <label for="egif-comarca">Comarca / Isla</label>
+                        <input type="text" id="egif-comarca" placeholder="Dejar en blanco si no aplica">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; width: 100%;">
+            <button onclick="guardarConfig()" id="btn-guardar" style="flex: 2;">Guardar Configuración</button>
+            <button onclick="location.href='/inicio'" style="flex: 1; background: rgba(255,255,255,0.1);">Volver a Inicio</button>
+        </div>
+    </div>
+
+    <script>
+        // Cargar datos al abrir
+        window.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/config')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.AEMET) {
+                        document.getElementById('aemet-api').value = data.AEMET.api || "";
+                    }
+                    if (data.EGIF) {
+                        document.getElementById('egif-activo').checked = data.EGIF.activo;
+                        document.getElementById('egif-ca').value = data.EGIF.ComunidadAutonoma || "";
+                        document.getElementById('egif-prov').value = data.EGIF.Provincia || "";
+                        document.getElementById('egif-mun').value = data.EGIF.Municipio || "";
+                        document.getElementById('egif-comarca').value = data.EGIF.ComarcaIsla || "";
+                    }
+                    toggleEgif(); // Aplicar estado visual inicial
+                })
+                .catch(err => console.error("Error cargando config:", err));
+        });
+
+        // Efecto de apagar/encender EGIF
+        function toggleEgif() {
+            const isActivo = document.getElementById('egif-activo').checked;
+            const fieldsContainer = document.getElementById('egif-fields');
+            const inputs = fieldsContainer.querySelectorAll('input');
+            
+            if (isActivo) {
+                fieldsContainer.style.opacity = "1";
+                fieldsContainer.style.pointerEvents = "auto";
+                inputs.forEach(input => input.disabled = false);
+            } else {
+                fieldsContainer.style.opacity = "0.4";
+                fieldsContainer.style.pointerEvents = "none";
+                inputs.forEach(input => input.disabled = true);
+            }
+        }
+
+        // Guardar configuración
+        function guardarConfig() {
+            const btn = document.getElementById('btn-guardar');
+            const originalText = btn.textContent;
+            btn.textContent = "Guardando...";
+
+            const getVal = (id) => {
+                const val = document.getElementById(id).value.trim();
+                return val === "" ? null : val;
+            };
+
+            const payload = {
+                AEMET: {
+                    api: document.getElementById('aemet-api').value.trim()
+                },
+                EGIF: {
+                    activo: document.getElementById('egif-activo').checked,
+                    ComunidadAutonoma: getVal('egif-ca'),
+                    Provincia: getVal('egif-prov'),
+                    Municipio: getVal('egif-mun'),
+                    ComarcaIsla: getVal('egif-comarca')
+                }
+            };
+
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    btn.textContent = "¡Guardado!";
+                    btn.style.background = "var(--accent-color)";
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = "var(--primary-color)";
+                    }, 2000);
+                } else {
+                    alert("Error al guardar: " + data.error);
+                    btn.textContent = originalText;
+                }
+            })
+            .catch(err => {
+                console.error("Error guardando:", err);
+                alert("Error de conexión al guardar.");
+                btn.textContent = originalText;
+            });
+        }
+    </script>
+</body>
+</html>

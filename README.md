@@ -1,118 +1,129 @@
-# Proyecto de predicción de riesgo de incendios
+﻿# Proyecto de predicción de riesgo de incendios
 
 ## Autores y razón del proyecto
 
 **Autor**: `Alejadro Beguer Ruiz`
 
-**Razon del proyecto**:
-Este proyecto ha sido modificado a partir del proyecto ["prediccion-incendios"](https://github.com/abeguerr01/prediccion_incendios), en el cual he participado yo mismo, con la razon de mejorarlo y presentarlo como trabajo de fin de grado del grado superior de desarrollo de aplicaciones multiplataforma.
+**Razón del proyecto**:
+Este proyecto ha sido modificado a partir del proyecto ["prediccion-incendios"](https://github.com/abeguerr01/prediccion_incendios), en el cual he participado yo mismo, con la razon de mejorarlo y presentarlo como trabajo de fin de grado del grado superior de desarrollo de aplicaciones multiplataforma. La principal mejora añadida en esta versión es una interfaz gráfica que facilita la configuración y el uso del análisis.
 
-## Cambios aplicados
-He añadido una interfaz hecha con JavaFX que permite realizar ajustes en el funcionamiento del 
+## Tecnologías usadas
 
----
----
----
----
----
----
----
----
+- Python 3.10+
+- Flask para la aplicación web
+- pywebview para la interfaz de escritorio
+- pandas, openpyxl, requests para procesamiento y lectura de datos
+- scikit-learn y CatBoost para entrenamiento y predicción
+- LightGBM, pyproj para cálculos geoespaciales y análisis
 
-## Detalles
+## Qué hace el proyecto
 
-### 1. Requisitos previos
+Esta aplicación procesa datos meteorológicos y de incendios para generar un dataset, entrenar un modelo de CatBoost y realizar predicciones de riesgo de incendios. Incluye una interfaz web local para:
 
-- **Python 3.10+**.
-- Conexión a Internet (para descargar dependencias y, si se usa, datos de AEMET).
-- `git` (opcional, solo para clonar el repositorio).
+- configurar parámetros de descarga de datos
+- iniciar el proceso de análisis
+- visualizar registros y resultados
+- descargar predicciones en CSV
 
-Estructura mínima esperada:
+## Requisitos previos
 
-- Carpeta `data/` con:
-  - `data/estaciones.json`
-  - `data/incendios/Incendios-2015-2025.xlsx` (u otro nombre, el script lo detecta).
+- Python 3.10 o superior
+- Conexión a Internet para instalar dependencias y, opcionalmente, descargar datos AEMET
+- Carpeta `data/` con los ficheros de entrada necesarios
 
-### 2. Instalación de dependencias
+## Instalación de dependencias
 
-#### 2.1. Windows
+### Windows
 
-1. Abre una terminal en la carpeta del proyecto, por ejemplo:
-   ```bash
-   cd D:\USER\Documents\GitHub\prevencion_incendios
-   ```
+1. Abre PowerShell o CMD en la raíz del proyecto.
+2. (Opcional) Crea y activa un entorno virtual:
 
-2. (Opcional pero recomendado) Crea y activa un entorno virtual:
-   ```bash
+   ```powershell
    python -m venv .venv
    .venv\Scripts\activate
    ```
 
 3. Ejecuta el instalador de dependencias:
 
-   ```bash
+   ```powershell
    install_dependencies_WINDOWS.bat
    ```
 
-Esto actualizará `pip` e instalará **todas** las librerías definidas en `requirements.txt`.
+### Linux
 
-#### 2.2. Linux
-
-1. Abre una terminal en la carpeta del proyecto:
-
-   ```bash
-   cd /ruta/a/prevencion_incendios
-   ```
-
-2. (Opcional pero recomendado) Crea y activa un entorno virtual:
+1. Abre una terminal en la raíz del proyecto.
+2. (Opcional) Crea y activa un entorno virtual:
 
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
    ```
 
-3. Da permisos de ejecución al script (solo la primera vez):
+3. Da permisos al instalador (solo la primera vez):
 
    ```bash
    chmod +x install_dependencies_LINUX.sh
    ```
 
-4. Lanza el instalador:
+4. Ejecuta el instalador:
 
    ```bash
    ./install_dependencies_LINUX.sh
    ```
 
-### 3. Ejecución del pipeline completo
+### Instalación manual
 
-Con las dependencias instaladas y desde la raíz del proyecto:
+Si prefieres instalar manualmente las dependencias:
 
 ```bash
-python main.py
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-El proceso ejecuta, en orden:
+## Uso
 
-1. **Configuración de estaciones y descarga de datos AEMET** (si está activado en `main.py`).
-2. **Procesamiento de datos de incendios** (`scripts/creador_incendios_v2.py`).
-3. **Creación del dataset base** (`scripts/crearDataset.py`).
-4. **Aplicación de fórmulas y generación de `dataset_features.csv`**.
-5. **Entrenamiento del modelo CatBoost** y guardado en:
-   - `Output/modelo/modelo_incendios_catboost.cbm`
-   - `Output/modelo/features_modelo.json`
-6. **Filtrado por fecha** y generación de `Output/Dataset/dataset_filtrado.csv`.
-7. **Predicción y análisis**, guardando las alertas en:
-   - `Output/resultados/predicion.csv`
+### Ejecutar la aplicación localmente
 
-Al final verás por consola un resumen de métricas (ROC-AUC, PR-AUC, recall, etc.) y ejemplos de las fechas/estaciones con mayor probabilidad de incendio.
+Desde la raíz del proyecto:
 
-### 4. Notas útiles
+```bash
+python app.py
+```
 
-- Si quieres **desactivar la descarga de datos de AEMET** (por ejemplo, si ya tienes los ficheros generados), puedes comentar temporalmente las llamadas correspondientes en `main.py`.
-- Si cambias los ficheros de entrada (`data/incendios`, datos AEMET, etc.), simplemente vuelve a ejecutar:
+Esto iniciará el servidor Flask y abrirá la interfaz de usuario.
 
-  ```bash
-  python main.py
-  ```
+### Ejecutar el pipeline completo de datos y modelo
 
-  para regenerar dataset, reentrenar el modelo y obtener nuevas predicciones.
+El pipeline principal se puede ejecutar con:
+
+```bash
+python -m scripts.run
+```
+
+### Resultados generados
+
+- `Output/modelo/modelo_incendios_catboost.cbm`
+- `Output/modelo/features_modelo.json`
+- `Output/Dataset/dataset_filtrado.csv`
+- `Output/resultados/prediccion.csv`
+- `Output/resultados/resumen_prediccion.txt`
+
+## Estructura del proyecto
+
+- `app.py` - servidor Flask y arranque del frontend
+- `requirements.txt` - dependencias Python
+- `data/` - datos de entrada, configuración y archivos AEMET
+- `scripts/` - módulos que generan dataset, entrenan el modelo y ejecutan predicciones
+- `Output/` - resultados y archivos generados
+- `templates/` - vistas HTML de la aplicación web
+- `static/` - recursos de estilo CSS
+
+## Notas importantes
+
+- Asegúrate de tener los datos de entrada en `data/` antes de ejecutar el pipeline.
+- La descarga de datos AEMET se controla desde `data/config.json`.
+- Si ya tienes los datos descargados, puedes desactivar la descarga en el pipeline para acelerar la ejecución.
+
+## Licencia
+
+Incluye aquí la licencia del proyecto si tienes una definida.

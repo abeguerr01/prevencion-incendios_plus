@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prevención de Incendios - Panel de Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container glass-panel">
+        <h1>Panel de Control de Prevención de Incendios</h1>
+        <button class="btn-main" onclick="location.href='/ejecutando'">INICIAR PREDICCIÓN</button>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="location.href='/config'" style="flex: 1;">Configuración</button>
+            <button onclick="location.href='/registros'" style="flex: 1;">Últimos Resultados</button>
+        </div>
+    </div>
+</body>
+
+</html>

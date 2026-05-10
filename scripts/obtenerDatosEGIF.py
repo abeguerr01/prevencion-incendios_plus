@@ -7,8 +7,11 @@ import pandas as pd
 from playwright.async_api import async_playwright
 
 async def scraper():
-    with open("data/config_EGIF.json", "r") as f:
-        dataScraper = json.load(f)
+    ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+    CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
+    with open(CONFIG_PATH, "r", encoding="utf-8-sig") as f:
+        config = json.load(f)
+    dataScraper = config.get("EGIF", {})
 
     anio_inicio = dataScraper["anio_inicio"]
     anio_fin = dataScraper["anio_fin"]
@@ -20,25 +23,25 @@ async def scraper():
     nameCSV = dataScraper["nameCSV"]
     nameJson = dataScraper["nameJson"]
 
-    nameZip = f"{dataScraper["nameZip"]}.zip"
+    nameZip = f"{dataScraper['nameZip']}.zip"
     output_dir = "Output/EGIF"
     path_zip = os.path.join(output_dir, nameZip)
-    
-    if os.path.exists(output_dir) and dataScraper["borrarDirectorio"]:
+
+    if os.path.exists(output_dir) and dataScraper.get("borrarDirectorio", False):
         try:
             for archivo in os.listdir(output_dir):
                 ruta = os.path.join(output_dir, archivo)
-                if os.path.isfile(ruta): # Solo borra si es un archivo
+                if os.path.isfile(ruta):
                     os.remove(ruta)
             print(f"Directorio {output_dir}, vaciado")
         except Exception as e:
             print(f"Error: {e}")
             return
     else:
-         if not os.path.exists(output_dir):
+        if not os.path.exists(output_dir):
             try:
                 os.makedirs(output_dir)
-                print(f"Directorio {output_dir}, vaciado")
+                print(f"Directorio {output_dir}, creado")
             except Exception as e:
                 print(f"Error: {e}")
                 return
@@ -52,8 +55,6 @@ async def scraper():
             print("Navegando al sitio...")
             await page.goto("https://servicio.mapa.gob.es/incendios/Search/Publico", wait_until="networkidle")
 
-            # Forzamos los valores directamente en el inyectando js
-            # Esto ignora si el panel está colapsado o si el input es invisible
             print(f"Inyectando años mediante JS: {anio_inicio} - {anio_fin}")
             await page.evaluate(f"""() => {{
                 const d = document.getElementById('txtNumAnioDesde');
@@ -62,48 +63,39 @@ async def scraper():
                 if(h) {{ h.value = '{anio_fin}'; h.dispatchEvent(new Event('change')); }}
             }}""")
 
-            # 2. Seleccion de region
             print(f"\nSeleccionando datos de la region\nComunidad Autonoma = {comunidadAutonoma}\nProvincia = {provincia}\nMunicipio = {municipio}\nComarca/Isla = {comarcaIsla}\n")
-            
-            #Comunidad Autonoma
-            if comunidadAutonoma and str(comunidadAutonoma).strip():
-                await page.locator('input.default').nth(0).fill(comunidadAutonoma)
+
+            if comunidadAutonoma is not None and str(comunidadAutonoma).strip():
                 await page.locator('input.default').nth(0).fill(comunidadAutonoma)
                 await page.locator('input.default').nth(0).press('ArrowLeft')
                 await page.locator('input.default').nth(0).press('Enter')
             print("comunidad obtenida")
 
-            #Provincia
-            if provincia and str(provincia).strip():
-                await page.locator('input.default').nth(0).fill(provincia)
+            if provincia is not None and str(provincia).strip():
                 await page.locator('input.default').nth(0).fill(provincia)
                 await page.locator('input.default').nth(0).press('ArrowLeft')
                 await page.locator('input.default').nth(0).press('Enter')
             print("provincia filtrado")
 
-            #Municipio
-            if municipio and str(municipio).strip():
-                await page.locator('input.default').nth(0).fill(municipio)
+            if municipio is not None and str(municipio).strip() and municipio != 'None':
                 await page.locator('input.default').nth(0).fill(municipio)
                 await page.locator('input.default').nth(0).press('ArrowLeft')
                 await page.locator('input.default').nth(0).press('Enter')
             print("municipio filtrado")
 
-            if comarcaIsla and str(comarcaIsla).strip():
-                await page.locator('input.default').nth(0).fill(comarcaIsla)
+            if comarcaIsla is not None and str(comarcaIsla).strip() and comarcaIsla != 'None':
                 await page.locator('input.default').nth(0).fill(comarcaIsla)
                 await page.locator('input.default').nth(0).press('ArrowLeft')
                 await page.locator('input.default').nth(0).press('Enter')
             print("comarca filtrado")
 
-            # 3. Click en Buscar
             print("Ejecutando búsqueda...")
             await page.click("#btnBusqueda")
 
             print("Esperando carga...")
             await page.wait_for_load_state("networkidle")
             await page.click("#idExportacionDatos")
-            
+
             print("Seleccionando opcion...")
             await page.click("label[for='idTipoExportacionExcelResumen']")
             await page.wait_for_load_state("networkidle")
@@ -117,27 +109,19 @@ async def scraper():
                 await page.click("#btnDescargaXmlCapitulos")
 
             download = await download_info.value
-
-
-            # Guardar el archivo donde quieras
             await download.save_as(path_zip)
-            
-            # Descomprimir
+
             print("Descomprimiendo...")
             with zipfile.ZipFile(path_zip, 'r') as zip_ref:
                 zip_ref.extractall(output_dir)
             print(f"Proceso finalizado. Datos en carpeta '{output_dir}'.")
-            
-            #archivo
+
             patron = os.path.join(output_dir, "Xlsx_*.xlsx")
             filesXlsx = glob.glob(patron)
-            nameXlsx = filesXlsx[0] #Solo hay un xlsx
+            nameXlsx = filesXlsx[0]
             df = pd.read_excel(nameXlsx)
 
-            # Convertir a CSV y guardar
             df.to_csv(f"{output_dir}/{nameCSV}.csv", index=False, encoding="utf-8")
-
-            # Convertir a JSON y guardar
             json_data = df.to_json(orient='records', indent=4, force_ascii=False)
             with open(f"{output_dir}/{nameJson}.json", "w", encoding="utf-8") as f:
                 f.write(json_data)
@@ -147,10 +131,9 @@ async def scraper():
         finally:
             await browser.close()
 
-# Para arrancar desde otro archivo
-def run():
-    asyncio.run(run())
 
-# Para arrancar desde este mismo archivo
+def run():
+    asyncio.run(scraper())
+
 if __name__ == "__main__":
     asyncio.run(scraper())
