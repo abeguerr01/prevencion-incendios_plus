@@ -1,6 +1,6 @@
 ﻿{
     "AEMET": {
-        "api": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGVqYW5kcm8uYmVndWVyQGdtYWlsLmNvbSIsImp0aSI6IjYxZmEzYmM0LTdmNzAtNDU0My04N2FkLTA1MGIyZDQ5YWExNSIsImlzcyI6IkFFTUVUIiwiaWF0IjoxNzY5NTE2NDAwLCJ1c2VySWQiOiI2MWZhM2JjNC03ZjcwLTQ1NDMtODdhZC0wNTBiMmQ0OWFhMTUiLCJyb2xlIjoiIn0.jQQGz2x2DAjKzgFFlf2vyqQLgZ8s4LlR4pCAb-pOroo"
+        "api": ""
     },
     "EGIF": {
         "activo": true,

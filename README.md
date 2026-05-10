@@ -90,22 +90,7 @@ Desde la raíz del proyecto:
 python app.py
 ```
 
-Esto iniciará el servidor Flask y, si la ventana de escritorio está disponible, abrirá la interfaz de usuario.
-
-### Ejecutar solo el servidor web
-
-Si quieres ejecutar la aplicación sin la ventana de escritorio:
-
-```powershell
-set NO_WEBVIEW=1
-python app.py
-```
-
-Luego abre en el navegador:
-
-```
-http://127.0.0.1:5000/inicio
-```
+Esto iniciará el servidor Flask y abrirá la interfaz de usuario.
 
 ### Ejecutar el pipeline completo de datos y modelo
 
@@ -138,12 +123,6 @@ python -m scripts.run
 - Asegúrate de tener los datos de entrada en `data/` antes de ejecutar el pipeline.
 - La descarga de datos AEMET se controla desde `data/config.json`.
 - Si ya tienes los datos descargados, puedes desactivar la descarga en el pipeline para acelerar la ejecución.
-
-## Cómo contribuir
-
-1. Crea una rama nueva para tu cambio.
-2. Haz tus modificaciones.
-3. Abre una pull request describiendo qué mejoras propones.
 
 ## Licencia
 
