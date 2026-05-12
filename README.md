@@ -1,4 +1,4 @@
-﻿# Proyecto de predicción de riesgo de incendios
+# Proyecto de predicción de riesgo de incendios
 
 ## Autores y razón del proyecto
 
@@ -27,7 +27,8 @@ Esta aplicación procesa datos meteorológicos y de incendios para generar un da
 
 ## Requisitos previos
 
-- Python 3.10 o superior
+- Python 3.10 o superior (si no usas Docker)
+- Docker y Docker Compose (opcional, para despliegue en contenedor)
 - Conexión a Internet para instalar dependencias y, opcionalmente, descargar datos AEMET
 - Carpeta `data/` con los ficheros de entrada necesarios
 
@@ -81,6 +82,23 @@ pip install -r requirements.txt
 ```
 
 ## Uso
+
+### Ejecutar con Docker Compose
+
+Si tienes Docker instalado, puedes arrancar la aplicación de forma muy sencilla sin necesidad de instalar dependencias locales:
+
+```bash
+docker-compose up -d --build
+```
+
+Una vez levantado el contenedor, podrás acceder a la interfaz desde cualquier navegador web en [http://localhost:5000](http://localhost:5000).
+Tus resultados y configuraciones se guardarán automáticamente en tu equipo gracias a los volúmenes de Docker.
+
+Para detener la ejecución, utiliza:
+
+```bash
+docker-compose down
+```
 
 ### Ejecutar la aplicación localmente
 

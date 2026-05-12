@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+catboost_info/
+Output/
+data/config.json
+*.exe
+*.deb
+build_windows.bat
+build_linux_deb.sh

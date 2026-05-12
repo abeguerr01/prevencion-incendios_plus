@@ -1,4 +1,4 @@
-﻿from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file
 import subprocess
 import json
 import sys
@@ -13,8 +13,17 @@ CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
 
 app = Flask(__name__)
 
+#region Redirecciñon inicial
+
+@app.route('/')
+def root():
+    """Redirige a la pantalla de inicio"""
+    return redirect(url_for('flk_index'))
+
+#endregion
 
 #region Renderizado de HTMLs
+
 @app.route('/inicio')
 def flk_index():
     """Accedemos a la pantalla principal"""
@@ -111,18 +120,22 @@ def handle_config():
 def start_server():
     """Arrancar el servidor Flask."""
     # debug=False y use_reloader=False son críticos cuando se usa con hilos y webview
-    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+    host = '0.0.0.0' if os.environ.get('DOCKER_ENV') else '127.0.0.1'
+    app.run(host=host, port=5000, debug=False, use_reloader=False)
 
 if __name__ == "__main__":
-    t = threading.Thread(target=start_server, daemon=True)
-    t.start()
+    if os.environ.get('DOCKER_ENV'):
+        start_server()
+    else:
+        t = threading.Thread(target=start_server, daemon=True)
+        t.start()
 
-    webview.create_window(
-        'Predicción de Incendios - Panel de Control', 
-        'http://127.0.0.1:5000/inicio',
-        width=1024,
-        height=768,
-        min_size=(800, 600)
-    )
+        webview.create_window(
+            'Predicción de Incendios - Panel de Control', 
+            'http://127.0.0.1:5000/inicio',
+            width=1024,
+            height=768,
+            min_size=(800, 600)
+        )
 
-    webview.start(debug=False)
+        webview.start(debug=False)
