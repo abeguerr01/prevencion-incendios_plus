@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando servicios con Docker Compose...
+docker-compose up
