@@ -7,11 +7,17 @@ import threading
 import webview
 
 import scripts.run as run
+from scripts.init_appdata import setup_and_chdir
+
+EXE_DIR, APPDATA_DIR = setup_and_chdir()
     
-ROOT_DIR = os.path.dirname(__file__)
+# Usamos el APPDATA como raíz para los archivos de configuración y datos generados
+ROOT_DIR = APPDATA_DIR
 CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
 
-app = Flask(__name__)
+# Flask necesita saber dónde están sus templates/static. En caso de PyInstaller (frozen), 
+# los templates se quedan en la carpeta de la aplicación (sys._MEIPASS).
+app = Flask(__name__, template_folder=os.path.join(EXE_DIR, 'templates'), static_folder=os.path.join(EXE_DIR, 'static'))
 
 #region Redirecciñon inicial
 
@@ -37,18 +43,51 @@ def flk_ejecutando():
 @app.route('/stream_logs')
 def stream_logs():
     def generate():
-        process = subprocess.Popen(
-            [sys.executable, '-u', '-m', 'scripts.run'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            cwd=ROOT_DIR
-        )
-        for line in iter(process.stdout.readline, ''):
-            yield f"data: {line.strip()}\n\n"
-        process.stdout.close()
-        process.wait()
-        yield f"data: DONE\n\n"
+        import queue
+        q = queue.Queue()
+
+        class OutputGrabber:
+            def __init__(self, q):
+                self.q = q
+                self.buffer = ""
+            def write(self, text):
+                self.buffer += text
+                while "\n" in self.buffer:
+                    line, self.buffer = self.buffer.split("\n", 1)
+                    self.q.put(line)
+            def flush(self):
+                if self.buffer:
+                    self.q.put(self.buffer)
+                    self.buffer = ""
+
+        def run_thread():
+            old_stdout = sys.stdout
+            old_stderr = sys.stderr
+            grabber = OutputGrabber(q)
+            sys.stdout = grabber
+            sys.stderr = grabber
+            try:
+                import scripts.run
+                scripts.run.main()
+            except Exception as e:
+                q.put(f"Error: {e}")
+            finally:
+                grabber.flush()
+                sys.stdout = old_stdout
+                sys.stderr = old_stderr
+                q.put("DONE_FLAG")
+
+        t = threading.Thread(target=run_thread)
+        t.start()
+
+        while True:
+            line = q.get()
+            if line == "DONE_FLAG":
+                yield "data: DONE\n\n"
+                break
+            else:
+                yield f"data: {line}\n\n"
+
     return app.response_class(generate(), mimetype='text/event-stream')
 
 @app.route('/registros')

@@ -12,7 +12,10 @@ import scripts.entrenar_modelo_catboost as entrenarModelo
 import scripts.filtrar_fecha as ff
 import scripts.predictor_analizador as predictor
 
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+from scripts.init_appdata import setup_and_chdir
+EXE_DIR, APPDATA_DIR = setup_and_chdir()
+
+ROOT_DIR = APPDATA_DIR
 CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
 
 def cargar_config():

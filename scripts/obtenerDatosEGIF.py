@@ -7,7 +7,9 @@ import pandas as pd
 from playwright.async_api import async_playwright
 
 async def scraper():
-    ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+    from scripts.init_appdata import setup_and_chdir
+    EXE_DIR, APPDATA_DIR = setup_and_chdir()
+    ROOT_DIR = APPDATA_DIR
     CONFIG_PATH = os.path.join(ROOT_DIR, "data", "config.json")
     with open(CONFIG_PATH, "r", encoding="utf-8-sig") as f:
         config = json.load(f)
