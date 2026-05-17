@@ -21,7 +21,7 @@
             </div>
 
             <div style="display: flex; gap: 1rem;">
-                <button onclick="location.href='/descargar_prediccion'" style="flex: 2;">Descargar CSV Completo</button>
+                <a href="{{ url_for('descargar_prediccion') }}" class="btn-main" style="flex: 2; text-align: center; text-decoration: none;">Descargar CSV Completo</a>
                 <button onclick="location.href='/inicio'" style="flex: 1; background: rgba(255,255,255,0.1);">Volver a Inicio</button>
             </div>
         {% else %}

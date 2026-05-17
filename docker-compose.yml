@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  prevencion-incendios:
+  prediccion-incendios:
     build: .
-    container_name: prevencion-incendios-app
+    container_name: prediccion-incendios-app
     ports:
       - "5000:5000"
     environment:

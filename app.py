@@ -71,9 +71,14 @@ def flk_registros():
 def descargar_prediccion():
     """Descargar el archivo CSV de predicciones"""
     csv_path = os.path.join(ROOT_DIR, "Output", "resultados", "prediccion.csv")
-    if os.path.exists(csv_path):
+    if not os.path.exists(csv_path):
+        return "Archivo no encontrado", 404
+
+    try:
         return send_file(csv_path, as_attachment=True, download_name="prediccion.csv")
-    return "Archivo no encontrado", 404
+    except TypeError:
+        # Compatibilidad con versiones antiguas de Flask
+        return send_file(csv_path, as_attachment=True, attachment_filename="prediccion.csv")
 
 @app.route('/config')
 def flk_config():
